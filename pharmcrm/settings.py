@@ -45,6 +45,9 @@ INSTALLED_APPS = [
 
     # external apps
      'rest_framework',
+    
+    # my apps 
+    'prescriptions'
 ]
 
 MIDDLEWARE = [
