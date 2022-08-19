@@ -29,7 +29,7 @@ class PrescriptionItemModelTest(TestCase):
             item2.save()
             item2.full_clean()
     
-    def testQuantityBiggerThanZero(self):
+    def test_quantity_quantity_lower_bound(self):
         presc1 = ChronicPrescription.objects.create()
         item1 = PrescriptionItem(drug_name="Amarel 1 mg b/30", quantity=0, prescription=presc1)
 
@@ -49,34 +49,41 @@ class PrescriptionItemModelTest(TestCase):
 class ChronicPrescriptionModelTest(TestCase):
     
 
-    def testDefaultDuration(self):
+    def test_defaultduration(self):
         chronicPresc = ChronicPrescription.objects.create()
         duration = chronicPresc.duration
         self.assertEqual(duration, 90)
     
-    def testMaxDuration(self):
+    def test_max_duration(self):
         chronicPresc = ChronicPrescription(duration=100)
        # Should raise an error cause max duration is 90
         with self.assertRaises(ValidationError):
             chronicPresc.save()
             chronicPresc.full_clean()
     
-    def testDefaultNotificationStatus(self):
+    def test_min_duration(self):
+        chronicPresc = ChronicPrescription(duration=29)
+       # Should raise an error cause min duration is 30
+        with self.assertRaises(ValidationError):
+            chronicPresc.save()
+            chronicPresc.full_clean()
+    
+    def test_default_notificationStatus(self):
         chronicPresc = ChronicPrescription.objects.create()
         notification_status = chronicPresc.notification_status
         self.assertTrue(notification_status)
     
 
-    def testNoPrescriptionInFutur(self):
-        future_date = datetime.date(2025,2,24)
+    def test_date_upper_bound(self):
+        future_date = datetime.date.today() +  datetime.timedelta(days=1)
         chronicPresc = ChronicPrescription(date=future_date)
         
         with self.assertRaises(ValidationError):
             chronicPresc.save()
             chronicPresc.full_clean()
     
-    def testNoOldPrescreptionDate(self):
-        old_date = datetime.date(1995,2,24)
+    def test_date_lower_bound(self):
+        old_date = datetime.date.today() - datetime.timedelta(days=91)
         chronicPresc = ChronicPrescription(date=old_date)
         
         with self.assertRaises(ValidationError):

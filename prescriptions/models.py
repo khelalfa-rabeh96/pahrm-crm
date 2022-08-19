@@ -21,7 +21,7 @@ class ChronicPrescription(models.Model):
     chronic_presecription_id = models.AutoField(primary_key=True)
     date = models.DateField(default=datetime.date.today, validators=[no_future_date, no_old_date])
     # This field is for the prescription duration in days
-    duration = models.PositiveIntegerField(default=90, validators=[MaxValueValidator(90)])
+    duration = models.PositiveIntegerField(default=90, validators=[MaxValueValidator(90), MinValueValidator(30)])
     notification_status = models.BooleanField(default=True)
 
     
