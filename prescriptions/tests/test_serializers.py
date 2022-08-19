@@ -35,7 +35,7 @@ class PrescriptionItemTestCase(TestCase):
         prescription_serializer = ChronicPrescriptionSerializer(self.presc)
         item_serializer = PrescriptionItemSerializer(item)
         
-        self.assertEqual(item_serializer.data['prescription'], self.presc.chronic_presecription_id)
+        self.assertEqual(item_serializer.data['prescription'], self.presc.chronic_prescription_id)
         self.assertIn(item_serializer.data, prescription_serializer.data['drugs'])
     
         
@@ -43,7 +43,7 @@ class PrescriptionItemTestCase(TestCase):
     def test_quantity_lower_bound_constraint(self):
         item_data = {'drug_name': 'Dolipran cp 1g',
                 'quantity': 15,
-                'prescription': self.presc.chronic_presecription_id}
+                'prescription': self.presc.chronic_prescription_id}
 
         item_data['quantity'] = -15
         item_serializer = PrescriptionItemSerializer(data=item_data)
@@ -57,7 +57,7 @@ class PrescriptionItemTestCase(TestCase):
     def test_unique_item_by_name(self):
         data1 = {'drug_name': 'Dolipran cp 1g',
                 'quantity': 15,
-                'prescription': self.presc.chronic_presecription_id}
+                'prescription': self.presc.chronic_prescription_id}
 
         serializer1 = PrescriptionItemSerializer(data=data1)
         if serializer1.is_valid():
@@ -73,7 +73,7 @@ class PrescriptionItemTestCase(TestCase):
 
 class ChronicPrescriptionTestCase(TestCase):
     def test_contains_expected_fields(self):
-        expected_fields = ['chronic_presecription_id', 'date', 'duration', 'notification_status', 'drugs']
+        expected_fields = ['chronic_prescription_id', 'date', 'duration', 'notification_status', 'drugs']
         
         prescr = ChronicPrescription.objects.create()
         prescr_serializer = ChronicPrescriptionSerializer(prescr)
