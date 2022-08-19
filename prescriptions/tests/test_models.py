@@ -71,7 +71,7 @@ class ChronicPrescriptionModelTest(TestCase):
         future_date = datetime.date(2025,2,24)
         chronicPresc = ChronicPrescription(date=future_date)
         
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             chronicPresc.save()
             chronicPresc.full_clean()
     
@@ -79,7 +79,7 @@ class ChronicPrescriptionModelTest(TestCase):
         old_date = datetime.date(1995,2,24)
         chronicPresc = ChronicPrescription(date=old_date)
         
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             chronicPresc.save()
             chronicPresc.full_clean()
 
