@@ -14,7 +14,7 @@ def no_future_date(value):
 def no_old_date(value):
     today = datetime.date.today()
     if value < (today - datetime.timedelta(days = 90)):
-        raise ValidationError('Purchase_Date cannot be too old.')
+        raise ValidationError('Prescription_Date cannot be too old.')
 
 # Create your models here.
 class ChronicPrescription(models.Model):
