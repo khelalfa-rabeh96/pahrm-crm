@@ -54,7 +54,7 @@ class PrescriptionItemTestCase(TestCase):
         self.assertFalse(item_serializer.is_valid())
         self.assertEqual(set(item_serializer.errors), set(['quantity']))
     
-    def test_unique_item_by_name(self):
+    def test_unique_item_by_drug_name_with_the_same_prescription(self):
         data1 = {'drug_name': 'Dolipran cp 1g',
                 'quantity': 15,
                 'prescription': self.presc.chronic_prescription_id}
@@ -64,11 +64,20 @@ class PrescriptionItemTestCase(TestCase):
             serializer1.save()
         self.assertTrue(serializer1.is_valid())
 
-        # Replicated data 
+        # Replicated drug name in the same prescription 
         serializer2 = PrescriptionItemSerializer(data=data1)
         if serializer2.is_valid():
             serializer2.save()
         self.assertFalse(serializer2.is_valid())
+
+        prescr2 = ChronicPrescription.objects.create()
+        data1['prescription'] = prescr2.chronic_prescription_id
+
+        serializer2 = PrescriptionItemSerializer(data=data1)
+        if serializer2.is_valid():
+            serializer2.save()
+        self.assertTrue(serializer2.is_valid())
+
 
 
 class ChronicPrescriptionTestCase(TestCase):

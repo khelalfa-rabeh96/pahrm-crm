@@ -20,7 +20,8 @@ class PrescriptionItemModelTest(TestCase):
         self.assertNotIn(item1, presc2.drugs.all())
         self.assertNotIn(item2, presc1.drugs.all())
     
-    def test_unique_item_by_name(self):
+
+    def test_unique_drug_name_in_the_same_prescription(self):
         presc1 = ChronicPrescription.objects.create()
         item1 = PrescriptionItem.objects.create(drug_name="Amarel 1 mg b/30", quantity=5, prescription=presc1)
         item2 = PrescriptionItem(drug_name="Amarel 1 mg b/30", quantity=51, prescription=presc1)
@@ -28,6 +29,14 @@ class PrescriptionItemModelTest(TestCase):
         with self.assertRaises(IntegrityError):
             item2.save()
             item2.full_clean()
+    
+    def test_same_drug_name_in_different_prescriptions(self):
+        presc1 = ChronicPrescription.objects.create()
+        presc2 = ChronicPrescription.objects.create()
+        item1 = PrescriptionItem.objects.create(drug_name="Amarel 1 mg b/30", quantity=5, prescription=presc1)
+        item2 = PrescriptionItem.objects.create(drug_name="Amarel 1 mg b/30", quantity=51, prescription=presc2)
+
+        self.assertEqual(PrescriptionItem.objects.all().count(), 2)
     
     def test_quantity_quantity_lower_bound(self):
         presc1 = ChronicPrescription.objects.create()

@@ -30,7 +30,11 @@ class ChronicPrescription(models.Model):
 
 class PrescriptionItem(models.Model):
     prescription_item_id = models.AutoField(primary_key=True)
-    drug_name = models.CharField(max_length=250, null=False, blank=False, unique=True)
+    drug_name = models.CharField(max_length=250, null=False, blank=False)
     quantity = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)])
     prescription = models.ForeignKey('ChronicPrescription', on_delete=models.CASCADE, related_name="drugs")
+
+    class Meta:
+        managed = True 
+        unique_together = (('drug_name', 'prescription'),)
 
