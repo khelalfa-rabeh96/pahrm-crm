@@ -92,6 +92,29 @@ class ChronicPrescrionDetailViewTestCase(APITestCase):
 
         self.assertIn(old_item_serializer.data, prescr_serializer.data['drugs'])
         self.assertNotIn(new_item_serializer.data, prescr_serializer.data['drugs'])
+    
+    # Test adding new item to a prescription
+    def test_posting_new_item_to_prescription(self):
+        new_item_data = {
+            'prescription': self.presc.chronic_prescription_id,
+            'drug_name': 'Loratadine cp 10mg',
+            'quantity': 15
+            }
+        
+        prescr_serializer = ChronicPrescriptionSerializer(self.presc)
+        self.assertEqual(len(prescr_serializer.data['drugs']), 1)
+        
+        response = self.client.post(self.url, new_item_data)
+        response_data = json.loads(response.content.decode('utf-8'))
+
+        prescr_serializer = ChronicPrescriptionSerializer(self.presc)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(prescr_serializer.data['drugs']), 2)
+        
+        new_item = PrescriptionItemSerializer(PrescriptionItem.objects.last())
+        self.assertIn(new_item.data, prescr_serializer.data['drugs'])
+        self.assertEqual(new_item.data['drug_name'], new_item_data['drug_name'])
+        self.assertEqual(new_item.data['quantity'], new_item_data['quantity'])
 
 
     def test_edit_prescription(self):
@@ -115,4 +138,7 @@ class ChronicPrescrionDetailViewTestCase(APITestCase):
 
 
 
+    
 
+    
+        
