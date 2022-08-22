@@ -135,7 +135,54 @@ class ChronicPrescrionDetailViewTestCase(APITestCase):
         self.assertEqual(ChronicPrescription.objects.all().count(), 0)
 
 
+class ChronicPrescriptionItemDetailTestCase(APITestCase):
 
+    def setUp(self):
+        self.presc = ChronicPrescription.objects.create()
+        self.item_data = {'drug_name':"Dolipran cp 1g", 'quantity':1, 'prescription':self.presc}
+        self.item = PrescriptionItem.objects.create(**self.item_data)
+
+        self.url = reverse('chronic_prescription_item_detail', kwargs={'pk': self.item.prescription_item_id})
+
+    def test_get_returns_json_200(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['content-type'], 'application/json')
+    
+    def test_retrieve_prescription_item_detail(self):
+        response = self.client.get(self.url)
+        item_serializer = PrescriptionItemSerializer(instance=self.item)
+        response_data = json.loads(response.content.decode('utf8'))
+        self.assertEqual(response_data, item_serializer.data)
+    
+    def test_update_prescription_item(self):
+        item_serializer = PrescriptionItemSerializer(self.item)
+        data = {'drug_name':'new name', 'quantity': 10, 'prescription': item_serializer.data['prescription']}
+
+        response = self.client.put(self.url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        item = PrescriptionItem.objects.first()
+        self.assertEqual(item.drug_name, data['drug_name'])
+        self.assertEqual(item.quantity, data['quantity'])
+    
+    def test_partial_update_prscription_item(self):
+        data = {"quantity": 20}
+        response = self.client.put(self.url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        item = PrescriptionItem.objects.first()
+        self.assertEqual(item.drug_name, self.item_data['drug_name'])
+        self.assertNotEqual(item.quantity, self.item_data['quantity'])
+        self.assertEqual(item.quantity, data['quantity'])
+    
+
+    def test_delete_prescription_item(self):
+        response = self.client.delete(self.url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(PrescriptionItem.objects.all().count(), 0)
+        prescr_serializer = ChronicPrescriptionSerializer(self.presc)
+        self.assertEqual(len(prescr_serializer.data.get('drugs')), 0)
 
 
     

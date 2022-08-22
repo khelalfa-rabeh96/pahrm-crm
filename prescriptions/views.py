@@ -60,4 +60,37 @@ class ChronicPrescriptionDetailView(APIView):
         presc.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+class PrescriptionItemDetailView(APIView):
+    serializer_class = PrescriptionItemSerializer
 
+    def get(self, request, pk, format=None):
+        item = get_object_or_404(PrescriptionItem, pk=pk)
+        serializer = self.serializer_class(item)
+        return Response(serializer.data)
+    
+    def put(self, request, pk, format=None):
+        item = get_object_or_404(PrescriptionItem, pk=pk)
+        item_serializer = PrescriptionItemSerializer(item)
+
+        data = request.data.copy()
+
+        if data.get('drug_name') is None :
+            data['drug_name'] = item_serializer.data['drug_name']
+        
+        if data.get('quantity') is None :
+            data['quantity'] = item_serializer.data['quantity']
+        
+        if data.get('prescription') is None :
+            data['prescription'] = item_serializer.data['prescription']
+
+        serializer = self.serializer_class(item, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+    def delete(self, request, pk, format=None):
+        item = get_object_or_404(PrescriptionItem, pk=pk)
+        item.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
