@@ -3,22 +3,31 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
+
 
 
 from .models import ChronicPrescription, PrescriptionItem
 from .serializers import ChronicPrescriptionSerializer, PrescriptionItemSerializer
 
-class ChronicPrescriptionListView(APIView):
+class ChronicPrescriptionListView(APIView, PageNumberPagination):
     serializer_class = ChronicPrescriptionSerializer
 
-    def get(self, request, format=None):
-        prescriptions = ChronicPrescription.objects.all()
-        serializer  = self.serializer_class(prescriptions, many=True)
+    def get_queryset(self):
+        queryset = ChronicPrescription.objects.all()
+        drug_name = self.request.query_params.get('drug_name')
+        if drug_name is not None:
+            queryset = queryset.filter(drugs__drug_name__icontains=drug_name).all()
+        
+        return queryset
 
-        return Response(serializer.data)
+    def get(self, request, format=None):
+        prescriptions = self.get_queryset()
+        prescriptions_pg = self.paginate_queryset(prescriptions, request, view=self)
+        serializer  = self.serializer_class(prescriptions_pg, many=True)
+        return self.get_paginated_response(serializer.data)
     
     def post(self, request, format=None):
-     
         serializer = self.serializer_class(data=request.data)
         
         if serializer.is_valid():
@@ -27,8 +36,6 @@ class ChronicPrescriptionListView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ChronicPrescriptionDetailView(APIView):
-    
-
     def get(self, request, pk, format=None):
         presc = get_object_or_404(ChronicPrescription, pk=pk)
         serializer = ChronicPrescriptionSerializer(presc)

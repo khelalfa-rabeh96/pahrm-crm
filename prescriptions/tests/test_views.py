@@ -13,7 +13,7 @@ class ChronicPrescriptionListViewTestCase(APITestCase):
     def setUp(self):
         self.url = reverse('chronic_prescription_list')
 
-        presc = ChronicPrescription.objects.create()
+        self.presc = ChronicPrescription.objects.create()
         
 
     
@@ -22,12 +22,40 @@ class ChronicPrescriptionListViewTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response['content-type'], 'application/json')
     
-    def test_return_prescription_list(self):
+    def test_return_pagintation_prescription_list(self):
         response = self.client.get(self.url)
         data = json.loads(response.content.decode('utf8'))
         serializer = ChronicPrescriptionSerializer(ChronicPrescription.objects.first())
-        self.assertIn(serializer.data, data)
+        self.assertIn(serializer.data, data['results'])
+        self.assertEqual(data['count'], 1)
+        self.assertIsNone(data['previous'])
+        self.assertIsNone(data['next'])
     
+    def test_search_prescritions_that_includ_a_given_drug(self):
+        PrescriptionItem.objects.create(**{"drug_name": "Amoxicilline 1g", "quantity": 9, "prescription": self.presc})
+
+        presc2 = ChronicPrescription.objects.create()
+        PrescriptionItem.objects.create(**{"drug_name": "Clamoxyl 1g", "quantity": 4, "prescription": presc2})
+
+        # prescription 1 contains 'amoxicilline' in its items while prescr2 does not
+        response = self.client.get(self.url, {'drug_name': 'amoxicilline'})
+        response_data = json.loads(response.content.decode('utf-8'))
+        results = response_data['results']
+        
+        self.assertTrue(self.presc.chronic_prescription_id in [presc['chronic_prescription_id'] for presc in results])
+        self.assertFalse(presc2.chronic_prescription_id in [presc['chronic_prescription_id'] for presc in results])
+
+
+        # prescription 2 contains 'clamoxyl' in its items while prescription 1 does not
+        response = self.client.get(self.url, {'drug_name': 'clamoxyl'})
+        response_data = json.loads(response.content.decode('utf-8'))
+        results = response_data['results']
+
+        self.assertFalse(self.presc.chronic_prescription_id in [presc['chronic_prescription_id'] for presc in results])
+        self.assertTrue(presc2.chronic_prescription_id in [presc['chronic_prescription_id'] for presc in results])
+        
+
+
     
     def test_post_new_prescription_with_no_data(self):
         response = self.client.post(self.url)
@@ -49,6 +77,7 @@ class ChronicPrescriptionListViewTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response_data['duration'], 60)
         self.assertTrue(response_data['notification_status'])
+    
     
     def test_for_invalid_duration_returns_error_code(self):
         response = self.client.post( self.url,
