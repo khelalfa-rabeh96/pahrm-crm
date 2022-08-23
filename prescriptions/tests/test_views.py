@@ -44,16 +44,35 @@ class ChronicPrescriptionListViewTestCase(APITestCase):
         
         self.assertTrue(self.presc.chronic_prescription_id in [presc['chronic_prescription_id'] for presc in results])
         self.assertFalse(presc2.chronic_prescription_id in [presc['chronic_prescription_id'] for presc in results])
+    
+    # Fetch only prescriptions that will be serve again soon
+    # prescription that has left less than 15 days should be notified
+    # So the pharmacist can take in consediration to avoid missing any medication 
+    # This prescription would has
+    def test_get_only_comming_soon_prescriptions(self):
+        p1 = ChronicPrescription.objects.create(
+            date=datetime.date.today() - datetime.timedelta(days=70) # duration is 90 days, so there is 20 days left
+            ) 
+        p2 = ChronicPrescription.objects.create(
+            date=datetime.date.today() - datetime.timedelta(days=80) # duration is 90 days, so there is 10 days left
+            ) 
+        p3 = ChronicPrescription.objects.create(
+            date=datetime.date.today() - datetime.timedelta(days=50), # duration is 60 days, so there is 10 days left
+            duration=60
+            ) 
 
-
-        # prescription 2 contains 'clamoxyl' in its items while prescription 1 does not
-        response = self.client.get(self.url, {'drug_name': 'clamoxyl'})
+        response = self.client.get(self.url, {"comming_soon":""})
         response_data = json.loads(response.content.decode('utf-8'))
-        results = response_data['results']
 
-        self.assertFalse(self.presc.chronic_prescription_id in [presc['chronic_prescription_id'] for presc in results])
-        self.assertTrue(presc2.chronic_prescription_id in [presc['chronic_prescription_id'] for presc in results])
-        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        ids = [p['chronic_prescription_id'] for p in response_data['results']]
+
+        self.assertNotIn(self.presc.chronic_prescription_id, ids)
+        self.assertNotIn(p1.chronic_prescription_id, ids)
+        self.assertIn(p2.chronic_prescription_id, ids)
+        self.assertIn(p3.chronic_prescription_id, ids)
+
 
 
     

@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
-
+import datetime
+from django.db.models import  F
 
 
 from .models import ChronicPrescription, PrescriptionItem
@@ -19,6 +20,16 @@ class ChronicPrescriptionListView(APIView, PageNumberPagination):
         if drug_name is not None:
             queryset = queryset.filter(drugs__drug_name__icontains=drug_name).all()
         
+        # comming soon is True only if: 0 < left days to serve the prescription again  < 15   
+        # left_days = (today() - (date + duration))
+        # comming soon is True only if: today - duration <= prescr_date <= today - duration - 15
+        comming_soon = self.request.query_params.get('comming_soon')
+        if comming_soon is not None or comming_soon == '' :
+            queryset = queryset.filter(date__lte=datetime.date.today() - (
+                datetime.timedelta(days=1)*F('duration') - 
+                datetime.timedelta(days=15) 
+                )).filter(date__gte=datetime.date.today() - (datetime.timedelta(days=1) * F('duration')))
+            
         return queryset
 
     def get(self, request, format=None):
