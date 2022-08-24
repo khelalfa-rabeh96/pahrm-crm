@@ -98,4 +98,14 @@ class ChronicPrescriptionModelTest(TestCase):
         with self.assertRaises(ValidationError):
             chronicPresc.save()
             chronicPresc.full_clean()
+    
+    def test_count_left_days(self):
+        presc = ChronicPrescription(date=datetime.date(2022,3,1), duration=45)
+
+        # Since Mars got 31 days
+        expected_serving_day = datetime.date(2022,4,15)
+        left_days = presc.count_left_days()
+        print(left_days)
+
+        self.assertEqual(datetime.date.today()+datetime.timedelta(days=left_days), expected_serving_day)
 

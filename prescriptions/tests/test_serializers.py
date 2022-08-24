@@ -82,7 +82,7 @@ class PrescriptionItemTestCase(TestCase):
 
 class ChronicPrescriptionTestCase(TestCase):
     def test_contains_expected_fields(self):
-        expected_fields = ['chronic_prescription_id', 'date', 'duration', 'notification_status', 'drugs']
+        expected_fields = ['chronic_prescription_id', 'date', 'duration', 'notification_status', 'drugs', 'left_days']
         
         prescr = ChronicPrescription.objects.create()
         prescr_serializer = ChronicPrescriptionSerializer(prescr)
@@ -125,6 +125,28 @@ class ChronicPrescriptionTestCase(TestCase):
             prescr_serializer.save()
         self.assertFalse(prescr_serializer.is_valid())
         self.assertEqual(set(prescr_serializer.errors), set(['date']))
+    
+    def test_get_left_days(self):
+        presc = ChronicPrescription.objects.create(**{
+            'date': datetime.date.today() - datetime.timedelta(days=60),
+            'duration': 45
+            })
+        
+
+        # Expected day to be served
+        serving_day = presc.date + datetime.timedelta(days=presc.duration)
+        today = datetime.date.today()
+        delta = serving_day - today 
+
+        # left days to be served
+        expected_left_days = delta.days 
+
+        serializer = ChronicPrescriptionSerializer(presc)
+        self.assertEqual(expected_left_days, serializer.data['left_days'])
+
+
+    
+    
     
 
  

@@ -9,6 +9,11 @@ class PrescriptionItemSerializer(serializers.ModelSerializer):
 class ChronicPrescriptionSerializer(serializers.ModelSerializer):
     drugs = PrescriptionItemSerializer(many=True, read_only=True)
     notification_status = serializers.BooleanField(default=True)
+
+    left_days = serializers.SerializerMethodField()
+    def get_left_days(self, obj):
+        return obj.count_left_days()
+
     class Meta:
         model = ChronicPrescription
-        fields = ('chronic_prescription_id', 'date', 'duration', 'notification_status', 'drugs')
+        fields = ('chronic_prescription_id', 'date', 'duration', 'notification_status', 'left_days', 'drugs')

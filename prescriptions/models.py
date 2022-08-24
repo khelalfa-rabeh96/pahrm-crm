@@ -24,7 +24,15 @@ class ChronicPrescription(models.Model):
     duration = models.PositiveIntegerField(default=90, validators=[MaxValueValidator(90), MinValueValidator(30)])
     notification_status = models.BooleanField(default=True)
 
-    
+
+    def count_left_days(self):
+        # Returning how many days are left to serve this prescription again
+        serving_day = (self.date + datetime.timedelta(days=self.duration))
+        delta = serving_day - datetime.date.today() 
+        left_days = delta.days
+
+        return left_days
+
    
 
 
