@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
 from customers.models import Customer
+from prescriptions.models import ChronicPrescription
 
 class CustomerModelTestCase(TestCase):
     
@@ -58,6 +59,28 @@ class CustomerModelTestCase(TestCase):
         with self.assertRaises(ValidationError):
             john.save()
             john.full_clean()
+    
+    def test_customer_related_chronic_prescriptions(self):
+        john = Customer.objects.create(customer_name="John Doe")
+        presc1 = ChronicPrescription.objects.create(customer=john)
+
+        mike = Customer.objects.create(customer_name="Mike Doe")
+        presc2 = ChronicPrescription.objects.create(customer=mike)
+
+        self.assertIn(presc1,john.chronic_prescription.all())
+        self.assertNotIn(presc2,john.chronic_prescription.all())
+
+        self.assertIn(presc2,mike.chronic_prescription.all())
+        self.assertNotIn(presc1,mike.chronic_prescription.all())
+    
+    def test_prescriptions_for_patient_customer_only(self):
+        pahramacist = Customer.objects.create(customer_name="Pahrmacist John", customer_type="copharmacy")
+        presc = ChronicPrescription(customer=pahramacist)
+
+        with self.assertRaises(ValidationError):
+            presc.save()
+            presc.full_clean()
+
         
         
 

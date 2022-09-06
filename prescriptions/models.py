@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import CheckConstraint, Q, F
 import datetime
 
-
+from customers.models import Customer
 
 def no_future_date(value):
     today = datetime.date.today()
@@ -16,7 +16,11 @@ def no_old_date(value):
     if value < (today - datetime.timedelta(days = 90)):
         raise ValidationError('Prescription_Date cannot be too old.')
 
-
+# Restrict prescriptions to be for patient customers only
+def prescriptions_for_patient_only(value):
+    customer = Customer.objects.get(pk=value)
+    if customer.customer_type != 'patient':
+        raise ValidationError('Only patient customer can have prescriptions.')
 
 # Create your models here.
 class ChronicPrescription(models.Model):
@@ -25,7 +29,8 @@ class ChronicPrescription(models.Model):
     # This field is for the prescription duration in days
     duration = models.PositiveIntegerField(default=90, validators=[MaxValueValidator(90), MinValueValidator(30)])
     notification_status = models.BooleanField(default=True)
-    customer = models.ForeignKey('customers.Customer', on_delete=models.CASCADE, related_name="chronic_prescription")
+    customer = models.ForeignKey('customers.Customer', on_delete=models.CASCADE, related_name="chronic_prescription", 
+                                 validators=[prescriptions_for_patient_only])
 
 
     def count_left_days(self):
@@ -36,6 +41,7 @@ class ChronicPrescription(models.Model):
 
         return left_days
 
+    
    
 
 
