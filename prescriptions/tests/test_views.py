@@ -5,15 +5,18 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 import datetime
 
+
+
 from prescriptions.models import ChronicPrescription, PrescriptionItem
 from prescriptions.serializers import ChronicPrescriptionSerializer, PrescriptionItemSerializer
+from customers.models import Customer
 
 class ChronicPrescriptionListViewTestCase(APITestCase):
 
     def setUp(self):
         self.url = reverse('chronic_prescription_list')
-
-        self.presc = ChronicPrescription.objects.create()
+        self.customer = Customer.objects.create(customer_name="John Doe")
+        self.presc = ChronicPrescription.objects.create(customer=self.customer)
         
 
     
@@ -34,7 +37,7 @@ class ChronicPrescriptionListViewTestCase(APITestCase):
     def test_search_prescritions_that_includ_a_given_drug(self):
         PrescriptionItem.objects.create(**{"drug_name": "Amoxicilline 1g", "quantity": 9, "prescription": self.presc})
 
-        presc2 = ChronicPrescription.objects.create()
+        presc2 = ChronicPrescription.objects.create(customer=self.customer)
         PrescriptionItem.objects.create(**{"drug_name": "Clamoxyl 1g", "quantity": 4, "prescription": presc2})
 
         # prescription 1 contains 'amoxicilline' in its items while prescr2 does not
@@ -51,14 +54,17 @@ class ChronicPrescriptionListViewTestCase(APITestCase):
     # This prescription would has
     def test_get_only_comming_soon_prescriptions(self):
         p1 = ChronicPrescription.objects.create(
-            date=datetime.date.today() - datetime.timedelta(days=70) # duration is 90 days, so there is 20 days left
+            date=datetime.date.today() - datetime.timedelta(days=70), # duration is 90 days, so there is 20 days left
+            customer=self.customer
             ) 
         p2 = ChronicPrescription.objects.create(
-            date=datetime.date.today() - datetime.timedelta(days=80) # duration is 90 days, so there is 10 days left
+            date=datetime.date.today() - datetime.timedelta(days=80), # duration is 90 days, so there is 10 days left
+            customer=self.customer
             ) 
         p3 = ChronicPrescription.objects.create(
             date=datetime.date.today() - datetime.timedelta(days=50), # duration is 60 days, so there is 10 days left
-            duration=60
+            duration=60,
+            customer=self.customer
             ) 
 
         response = self.client.get(self.url, {"comming_soon":""})
@@ -76,8 +82,8 @@ class ChronicPrescriptionListViewTestCase(APITestCase):
 
 
     
-    def test_post_new_prescription_with_no_data(self):
-        response = self.client.post(self.url)
+    def test_post_new_prescription_with_no_default_data(self):
+        response = self.client.post(self.url, {'customer': self.customer.id})
         response_data = json.loads(response.content.decode('utf8'))
 
 
@@ -89,7 +95,9 @@ class ChronicPrescriptionListViewTestCase(APITestCase):
         response = self.client.post( self.url,
          {
             "duration": 60, 
-            "date": datetime.date.today() - datetime.timedelta(days=5)
+            "date": datetime.date.today() - datetime.timedelta(days=5),
+            'customer': self.customer.id
+            
         })
         response_data = json.loads(response.content.decode('utf8'))
 
@@ -102,6 +110,7 @@ class ChronicPrescriptionListViewTestCase(APITestCase):
         response = self.client.post( self.url,
          {
             "duration": 150, 
+            'customer': self.customer.id
         })
         response_data = json.loads(response.content.decode('utf8'))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -109,7 +118,8 @@ class ChronicPrescriptionListViewTestCase(APITestCase):
 class ChronicPrescrionDetailViewTestCase(APITestCase):
 
     def setUp(self):
-        self.presc = ChronicPrescription.objects.create()
+        self.customer = Customer.objects.create(customer_name="John Doe")
+        self.presc = ChronicPrescription.objects.create(customer=self.customer)
         self.url = reverse('chronic_prescription_detail', kwargs={'pk': self.presc.chronic_prescription_id})
         item_data = {'drug_name':"Dolipran cp 1g", 'quantity':1, 'prescription':self.presc}
         self.item = PrescriptionItem.objects.create(**item_data)
@@ -128,7 +138,7 @@ class ChronicPrescrionDetailViewTestCase(APITestCase):
     
     def test_retrieve_prescription_related_item(self):
         # New prescription with its  new Item
-        new_presc = ChronicPrescription.objects.create()
+        new_presc = ChronicPrescription.objects.create(customer=self.customer)
         data = {'drug_name':"Expandol cp 1g", 'quantity':11, 'prescription':new_presc}
         new_item = PrescriptionItem.objects.create(**data)
         new_item_serializer = PrescriptionItemSerializer(new_item)
@@ -166,7 +176,9 @@ class ChronicPrescrionDetailViewTestCase(APITestCase):
 
 
     def test_edit_prescription(self):
-        updated_data = {'chronic_prescription_id': self.presc.chronic_prescription_id, 'duration': 60}
+        updated_data = {'chronic_prescription_id': self.presc.chronic_prescription_id, 
+                        'duration': 60, 'customer': self.customer.id
+                        }
         old_notification_status = self.presc.notification_status
         old_duration = self.presc.notification_status
 
@@ -186,7 +198,8 @@ class ChronicPrescrionDetailViewTestCase(APITestCase):
 class ChronicPrescriptionItemDetailTestCase(APITestCase):
 
     def setUp(self):
-        self.presc = ChronicPrescription.objects.create()
+        self.customer =  Customer.objects.create(customer_name="John Doe")
+        self.presc = ChronicPrescription.objects.create(customer=self.customer)
         self.item_data = {'drug_name':"Dolipran cp 1g", 'quantity':1, 'prescription':self.presc}
         self.item = PrescriptionItem.objects.create(**self.item_data)
 
@@ -234,6 +247,3 @@ class ChronicPrescriptionItemDetailTestCase(APITestCase):
 
 
     
-
-    
-        

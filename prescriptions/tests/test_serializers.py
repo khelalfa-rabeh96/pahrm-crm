@@ -2,12 +2,16 @@ from django.test import TestCase
 from django.db import IntegrityError
 import datetime
 
+
 from prescriptions.serializers import PrescriptionItemSerializer, ChronicPrescriptionSerializer
 from prescriptions.models import ChronicPrescription, PrescriptionItem
+from customers.models import Customer
+
 
 class PrescriptionItemTestCase(TestCase):
     def setUp(self):
-        self.presc = ChronicPrescription.objects.create()
+        self.customer = Customer.objects.create(customer_name="John Doe")
+        self.presc = ChronicPrescription.objects.create(customer=self.customer)
         self.item_data = {'drug_name': 'Amoxicilline EG cp 1g b/14',
                 'quantity': 15,
                 'prescription': self.presc}
@@ -15,7 +19,7 @@ class PrescriptionItemTestCase(TestCase):
     
     def test_contains_expected_fields(self):
         expected_fields = ['prescription_item_id', 'drug_name', 'quantity', 'prescription']
-        
+
         item = PrescriptionItem.objects.first()
         item_serializer = PrescriptionItemSerializer(item)
 
@@ -70,7 +74,7 @@ class PrescriptionItemTestCase(TestCase):
             serializer2.save()
         self.assertFalse(serializer2.is_valid())
 
-        prescr2 = ChronicPrescription.objects.create()
+        prescr2 = ChronicPrescription.objects.create(customer=self.customer)
         data1['prescription'] = prescr2.chronic_prescription_id
 
         serializer2 = PrescriptionItemSerializer(data=data1)
@@ -81,21 +85,24 @@ class PrescriptionItemTestCase(TestCase):
 
 
 class ChronicPrescriptionTestCase(TestCase):
+    def setUp(self):
+        self.customer = Customer.objects.create(customer_name="John Doe")
+
     def test_contains_expected_fields(self):
-        expected_fields = ['chronic_prescription_id', 'date', 'duration', 'notification_status', 'drugs', 'left_days']
+        expected_fields = ['chronic_prescription_id', 'date', 'duration', 'notification_status', 'drugs', 'left_days', 'customer']
         
-        prescr = ChronicPrescription.objects.create()
+        prescr = ChronicPrescription.objects.create(customer=self.customer)
         prescr_serializer = ChronicPrescriptionSerializer(prescr)
 
         self.assertEqual(set(prescr_serializer.data.keys()), set(expected_fields))
     
     def test_default_duration(self):
-        prescr = ChronicPrescription.objects.create()
+        prescr = ChronicPrescription.objects.create(customer=self.customer)
         prescr_serializer = ChronicPrescriptionSerializer(prescr)
         self.assertEqual(prescr_serializer.data['duration'], 90)
     
     def test_upper_bound_duration(self):
-        prescr_serializer = ChronicPrescriptionSerializer(data={'duration': 1000})
+        prescr_serializer = ChronicPrescriptionSerializer(data={'duration': 1000, 'customer': self.customer.id})
         
         if prescr_serializer.is_valid():
             prescr_serializer.save()
@@ -103,7 +110,7 @@ class ChronicPrescriptionTestCase(TestCase):
         self.assertEqual(set(prescr_serializer.errors), set(['duration']))
 
     def test_lower_bound_duration(self):
-        prescr_serializer = ChronicPrescriptionSerializer(data={'duration': 29})
+        prescr_serializer = ChronicPrescriptionSerializer(data={'duration': 29,  'customer': self.customer.id})
         
         if prescr_serializer.is_valid():
             prescr_serializer.save()
@@ -111,7 +118,7 @@ class ChronicPrescriptionTestCase(TestCase):
         self.assertEqual(set(prescr_serializer.errors), set(['duration']))
 
     def test_date_upper_bound(self):
-        prescr_serializer = ChronicPrescriptionSerializer(data={'date': datetime.date.today() + datetime.timedelta(days=1)})
+        prescr_serializer = ChronicPrescriptionSerializer(data={'date': datetime.date.today() + datetime.timedelta(days=1),  'customer': self.customer.id})
         
         if prescr_serializer.is_valid():
             prescr_serializer.save()
@@ -119,7 +126,7 @@ class ChronicPrescriptionTestCase(TestCase):
         self.assertEqual(set(prescr_serializer.errors), set(['date']))
     
     def test_date_lower_bound(self):
-        prescr_serializer = ChronicPrescriptionSerializer(data={'date': datetime.date.today() - datetime.timedelta(days=91)})
+        prescr_serializer = ChronicPrescriptionSerializer(data={'date': datetime.date.today() - datetime.timedelta(days=91),  'customer': self.customer.id})
         
         if prescr_serializer.is_valid():
             prescr_serializer.save()
@@ -129,7 +136,8 @@ class ChronicPrescriptionTestCase(TestCase):
     def test_get_left_days(self):
         presc = ChronicPrescription.objects.create(**{
             'date': datetime.date.today() - datetime.timedelta(days=60),
-            'duration': 45
+            'duration': 45,
+            'customer': self.customer
             })
         
 

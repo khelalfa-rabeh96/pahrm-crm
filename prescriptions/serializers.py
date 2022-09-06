@@ -16,4 +16,4 @@ class ChronicPrescriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChronicPrescription
-        fields = ('chronic_prescription_id', 'date', 'duration', 'notification_status', 'left_days', 'drugs')
+        fields = ('chronic_prescription_id', 'date', 'duration', 'notification_status', 'left_days', 'drugs', 'customer')

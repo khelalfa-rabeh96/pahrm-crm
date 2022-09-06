@@ -16,6 +16,8 @@ def no_old_date(value):
     if value < (today - datetime.timedelta(days = 90)):
         raise ValidationError('Prescription_Date cannot be too old.')
 
+
+
 # Create your models here.
 class ChronicPrescription(models.Model):
     chronic_prescription_id = models.AutoField(primary_key=True)
@@ -23,6 +25,7 @@ class ChronicPrescription(models.Model):
     # This field is for the prescription duration in days
     duration = models.PositiveIntegerField(default=90, validators=[MaxValueValidator(90), MinValueValidator(30)])
     notification_status = models.BooleanField(default=True)
+    customer = models.ForeignKey('customers.Customer', on_delete=models.CASCADE, related_name="chronic_prescription")
 
 
     def count_left_days(self):
