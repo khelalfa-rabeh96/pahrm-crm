@@ -73,13 +73,7 @@ class CustomerModelTestCase(TestCase):
         self.assertIn(presc2,mike.chronic_prescription.all())
         self.assertNotIn(presc1,mike.chronic_prescription.all())
     
-    def test_prescriptions_for_patient_customer_only(self):
-        pahramacist = Customer.objects.create(customer_name="Pahrmacist John", customer_type="copharmacy")
-        presc = ChronicPrescription(customer=pahramacist)
-
-        with self.assertRaises(ValidationError):
-            presc.save()
-            presc.full_clean()
+    
 
         
         

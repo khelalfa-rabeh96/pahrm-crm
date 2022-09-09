@@ -105,6 +105,14 @@ class ChronicPrescriptionModelTest(TestCase):
         # Since Mars got 31 days
         expected_serving_day = datetime.date(2022,4,15)
         left_days = presc.count_left_days()
-        print(left_days)
 
         self.assertEqual(datetime.date.today()+datetime.timedelta(days=left_days), expected_serving_day)
+    
+    def test_prescriptions_for_patient_customer_only(self):
+        pahramacist = Customer.objects.create(customer_name="Pahrmacist John", customer_type="copharmacy")
+        presc = ChronicPrescription(customer=pahramacist)
+
+        with self.assertRaises(ValidationError):
+            #presc.save()
+            presc.full_clean()
+    

@@ -11,6 +11,7 @@ from prescriptions.models import ChronicPrescription, PrescriptionItem
 from prescriptions.serializers import ChronicPrescriptionSerializer, PrescriptionItemSerializer
 from customers.models import Customer
 
+
 class ChronicPrescriptionListViewTestCase(APITestCase):
 
     def setUp(self):
@@ -90,6 +91,8 @@ class ChronicPrescriptionListViewTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response_data['duration'], 90)
         self.assertTrue(response_data['notification_status'])
+          
+    
     
     def test_post_new_prescription_with_data(self):
         response = self.client.post( self.url,
@@ -156,7 +159,7 @@ class ChronicPrescrionDetailViewTestCase(APITestCase):
         new_item_data = {
             'prescription': self.presc.chronic_prescription_id,
             'drug_name': 'Loratadine cp 10mg',
-            'quantity': 15
+            'quantity': 15,
             }
         
         prescr_serializer = ChronicPrescriptionSerializer(self.presc)

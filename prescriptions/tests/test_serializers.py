@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.db import IntegrityError
 import datetime
+from customers.serializers import CustomerSerializer
 
 
 from prescriptions.serializers import PrescriptionItemSerializer, ChronicPrescriptionSerializer
@@ -108,7 +109,8 @@ class ChronicPrescriptionTestCase(TestCase):
             prescr_serializer.save()
         self.assertFalse(prescr_serializer.is_valid())
         self.assertEqual(set(prescr_serializer.errors), set(['duration']))
-
+    
+    
     def test_lower_bound_duration(self):
         prescr_serializer = ChronicPrescriptionSerializer(data={'duration': 29,  'customer': self.customer.id})
         
@@ -133,6 +135,7 @@ class ChronicPrescriptionTestCase(TestCase):
         self.assertFalse(prescr_serializer.is_valid())
         self.assertEqual(set(prescr_serializer.errors), set(['date']))
     
+
     def test_get_left_days(self):
         presc = ChronicPrescription.objects.create(**{
             'date': datetime.date.today() - datetime.timedelta(days=60),

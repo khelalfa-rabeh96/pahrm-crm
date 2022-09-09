@@ -18,9 +18,15 @@ def no_old_date(value):
 
 # Restrict prescriptions to be for patient customers only
 def prescriptions_for_patient_only(value):
-    customer = Customer.objects.get(pk=value)
+    if  isinstance(value, int):
+        customer = Customer.objects.get(pk=value)
+    else:
+        customer = value
+
     if customer.customer_type != 'patient':
         raise ValidationError('Only patient customer can have prescriptions.')
+
+        
 
 # Create your models here.
 class ChronicPrescription(models.Model):

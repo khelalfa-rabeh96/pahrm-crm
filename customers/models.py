@@ -18,11 +18,11 @@ def validate_phone_number(value):
 
 
 def prevent_replicated_phone(phone):
+    # Count all customers which own the same number
     phone_holders = Customer.objects.filter(phones__contains=[phone]).count()
     if phone_holders > 0 :
         raise ValidationError(
-            _('%(value)s already holded by another customer'),
-            params={'phone': phone},
+            f'The phone number: {phone} already exist',
         )
 
 
