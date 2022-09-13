@@ -81,6 +81,40 @@ class ChronicPrescriptionListViewTestCase(APITestCase):
         self.assertIn(p3.chronic_prescription_id, ids)
 
 
+    # test retrive prescriptions by customer name
+    def test_retrieve_prescriptions_by_customer_name_with_insensitive_case(self):
+        p1 = ChronicPrescription.objects.create(customer=self.customer) 
+        
+        mark = Customer.objects.create(customer_name="Mark")
+        p2 = ChronicPrescription.objects.create(customer=mark)
+        
+        response = self.client.get(self.url, {"customer":"john"})
+        response_data = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        ids = [p['chronic_prescription_id'] for p in response_data['results']]
+        self.assertIn(p1.chronic_prescription_id, ids)
+        self.assertNotIn(p2.chronic_prescription_id, ids)
+    
+    # test retrive prescriptions by medication name
+    def test_retrieve_prescriptions_include_drug_name_with_insensitive_case(self):
+        p1 = ChronicPrescription.objects.create(customer=self.customer) 
+        item1 = PrescriptionItem.objects.create(prescription=p1, drug_name="amoxicilline 1g", quantity=10)
+        
+        p2 = ChronicPrescription.objects.create(customer=self.customer)
+        item2 = PrescriptionItem.objects.create(prescription=p2, drug_name="paracetamol 1g", quantity=5)
+
+        
+        response = self.client.get(self.url, {"medication":"amoxicilline"})
+        response_data = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        ids = [p['chronic_prescription_id'] for p in response_data['results']]
+        self.assertIn(p1.chronic_prescription_id, ids)
+        self.assertNotIn(p2.chronic_prescription_id, ids)
+
+
+        
 
     
     def test_post_new_prescription_with_no_default_data(self):

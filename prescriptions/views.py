@@ -29,6 +29,16 @@ class ChronicPrescriptionListView(APIView, PageNumberPagination):
                 datetime.timedelta(days=1)*F('duration') - 
                 datetime.timedelta(days=15) 
                 )).filter(date__gte=datetime.date.today() - (datetime.timedelta(days=1) * F('duration')))
+        
+        # Filter prescriptions that includ a given drug 
+        medication = self.request.query_params.get('medication')
+        if medication  :
+            queryset = queryset.filter(drugs__drug_name__icontains=medication)
+        
+        # Filter prescriptions that concern a given customer
+        customer = self.request.query_params.get('customer')
+        if customer :
+            queryset = queryset.filter(customer__customer_name__icontains=customer)
             
         return queryset
 
