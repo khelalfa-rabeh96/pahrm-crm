@@ -90,7 +90,7 @@ class ChronicPrescriptionTestCase(TestCase):
         self.customer = Customer.objects.create(customer_name="John Doe")
 
     def test_contains_expected_fields(self):
-        expected_fields = ['chronic_prescription_id', 'date', 'duration', 'notification_status', 'drugs', 'left_days', 'customer']
+        expected_fields = ['chronic_prescription_id', 'date', 'duration', 'notification_status', 'drugs', 'left_days', 'customer', 'customer_name']
         
         prescr = ChronicPrescription.objects.create(customer=self.customer)
         prescr_serializer = ChronicPrescriptionSerializer(prescr)
