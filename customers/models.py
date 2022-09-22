@@ -16,7 +16,6 @@ def validate_phone_number(value):
         )
 
 
-
 def prevent_replicated_phone(phone):
     # Count all customers which own the same number
     phone_holders = Customer.objects.filter(phones__contains=[phone]).count()
@@ -25,16 +24,14 @@ def prevent_replicated_phone(phone):
             f'The phone number: {phone} already exist',
         )
 
-
-
-
 class Customer(models.Model):
     def __str__(self) :
         return self.customer_name
 
+
     id = models.BigAutoField(primary_key=True)
     customer_name = models.CharField(max_length=100, null=False, blank=False, unique=True)
-    phones = ArrayField(models.CharField(max_length=10, validators=[validate_phone_number, prevent_replicated_phone]), 
+    phones = ArrayField(models.CharField(max_length=10, validators=[validate_phone_number]), 
                                         default=list, null=True, blank=True)
     customer_type = models.CharField(max_length=10,default='patient', choices=CUSTOMER_TYPE)
 

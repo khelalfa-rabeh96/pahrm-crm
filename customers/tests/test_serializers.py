@@ -23,12 +23,3 @@ class CustomerSerialzerTestCase(TestCase):
         self.assertFalse(new_customer_serializer.is_valid())
         self.assertEqual(set(new_customer_serializer.errors), set(['phones']))
     
-    def test_replicated_phone_number(self):
-        Customer.objects.create(customer_name="John Doe", phones=["0795265877"])
-
-        anna_serializer = CustomerSerializer(data={"customer_name":"Anna", "phones":["0795265877"]})
-        if (anna_serializer.is_valid()):
-            anna_serializer.save()
-        
-        self.assertFalse(anna_serializer.is_valid())
-        self.assertEqual(set(anna_serializer.errors), set(['phones']))
